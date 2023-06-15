@@ -324,6 +324,9 @@ public class OSSSpeech: NSObject {
         speak()
     }
 
+    public func isSpeaking() -> Bool {
+        return speechSynthesizer.isSpeaking
+    }
     /// Pause speaking text
     ///
     /// Will check if the current speech synthesizer session is speaking before attempting to pause.
@@ -362,14 +365,15 @@ public class OSSSpeech: NSObject {
     }
 
     private func speak() {
-        var speechVoice = OSSVoice()
-        if let aVoice = voice {
-            speechVoice = aVoice
-        }
         let validString = utterance?.speechString ?? "error"
         // Utterance must be an original object in order to be spoken. We redefine an new instance of Utterance each time using the values in the existing utterance.
         let newUtterance = AVSpeechUtterance(string: validString)
-        newUtterance.voice = speechVoice
+
+        // 不设置使用系统默认 voice
+        if let aVoice = voice {
+            newUtterance.voice = aVoice
+        }
+
         if let validUtterance = utterance {
             newUtterance.rate = validUtterance.rate
             newUtterance.pitchMultiplier = validUtterance.pitchMultiplier
@@ -558,7 +562,8 @@ public class OSSSpeech: NSObject {
         }
         request = SFSpeechAudioBufferRecognitionRequest()
         engineSetup()
-        let identifier = voice?.voiceType.rawValue ?? OSSVoiceEnum.UnitedStatesEnglish.rawValue
+        // 不设置使用系统默认
+        let identifier = voice?.voiceType.rawValue ?? Locale.current.identifier
         speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: identifier))
         guard let recogniser = speechRecognizer else {
             delegate?.didFailToCommenceSpeechRecording()
